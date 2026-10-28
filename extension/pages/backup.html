@@ -1,0 +1,42 @@
+<!-- Copyright (C) 2026 DarkyTheRookie
+     SPDX-License-Identifier: GPL-3.0-or-later -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Backup & restore · Snipio</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/icons/snipio-32.png">
+  <link rel="stylesheet" href="backup.css">
+  <link rel="stylesheet" href="../styles/theme.css">
+  <script src="../lib/core.js" defer></script>
+  <script src="../lib/backup-core.js" defer></script>
+  <script src="backup.js" defer></script>
+</head>
+<body class="backup-page" data-quickphrase="off">
+  <main class="backup-card">
+    <a class="backup-brand" href="editor.html"><img src="../assets/icons/snipio-logo.svg" width="42" height="42" alt=""><span>Snipio.</span></a>
+    <h1>A copy to keep.</h1>
+    <p class="intro">Save your Snipio data before uninstalling, or bring it to another browser.</p>
+    <section aria-labelledby="export-heading">
+      <div class="backup-heading"><span class="step-number" aria-hidden="true">↓</span><h2 id="export-heading">Export backup</h2></div>
+      <p>Includes snippets, folders, favorites, settings, recoverable drafts, and usage history.</p>
+      <p id="current-summary" class="backup-summary">Loading your library…</p>
+      <button id="export-backup" class="primary-button" type="button" disabled>Export backup</button>
+    </section>
+    <section aria-labelledby="import-heading">
+      <div class="backup-heading"><span class="step-number" aria-hidden="true">↑</span><h2 id="import-heading">Import backup</h2></div>
+      <p>Choose a Snipio JSON backup to restore. Import replaces your current Snipio data. Export first to keep a copy.</p>
+      <label class="backup-file-label" for="backup-file">Choose backup file <span>JSON · up to 20 MB</span></label>
+      <input id="backup-file" type="file" accept=".json,application/json" aria-describedby="file-help">
+      <p id="file-help" class="file-help">The file is checked before anything is changed.</p>
+      <div id="backup-preview" class="backup-preview" hidden><strong id="backup-filename"></strong><p id="import-summary"></p><span id="backup-date"></span></div>
+      <button id="import-backup" class="secondary-button" type="button" disabled>Import backup</button>
+    </section>
+    <p id="backup-status" role="status" aria-live="polite"></p>
+    <p id="backup-error" role="alert" hidden></p>
+    <p class="backup-privacy">Files stay on your device. Backups contain your snippet text and are not encrypted.</p>
+    <a class="back-link" href="editor.html">← Back to Snipio</a>
+  </main>
+</body>
+</html>

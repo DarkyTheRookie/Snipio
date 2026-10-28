@@ -1,0 +1,16 @@
+/* Copyright (C) 2026 DarkyTheRookie
+   SPDX-License-Identifier: GPL-3.0-or-later */
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 32px; }
+.reset-card { width: min(100%, 480px); padding: 40px; border: 1px solid var(--line); border-radius: 28px; background: #ffffffbf; box-shadow: 0 24px 70px #246d8521, inset 0 1px #ffffffb3; backdrop-filter: blur(24px); }
+.reset-card img { display: block; object-fit: contain; }
+.eyebrow { margin: 22px 0 8px; font-size: 11px; font-weight: 700; letter-spacing: .16em; color: var(--muted); }
+h1 { margin: 0 0 16px; font-size: 36px; letter-spacing: -.05em; line-height: 1.1; }
+p { color: var(--muted); font-size: 14px; line-height: 1.7; }
+button { width: 100%; min-height: 46px; margin-top: 12px; padding: 12px 18px; border: 1px solid #ffffff80; border-radius: 14px; background: linear-gradient(145deg, #138bcc, #0d58b8); box-shadow: inset 0 1px 1px #ffffffa0, inset 0 -1px 2px #003f7c44, 0 5px 16px #1476b52b; color: #fff; font-family: inherit; font-size: 14px; font-weight: 600; line-height: 1.3; cursor: pointer; }
+button.secondary { background: #e2f3f880; border-color: var(--line); box-shadow: inset 0 1px #b8dcff29; color: var(--ink); }
+button:disabled { opacity: .6; cursor: wait; }
+button:focus-visible { outline: 3px solid #60b7f2; outline-offset: 3px; }
+#reset-status:empty { display: none; }
+#reset-status { margin-bottom: 0; }
+[hidden] { display: none !important; }

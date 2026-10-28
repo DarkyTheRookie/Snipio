@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 224" fill="none">
+  <defs>
+    <linearGradient id="body" x1="55" y1="24" x2="212" y2="211" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#72E9ED"/>
+      <stop offset=".42" stop-color="#18CAE6"/>
+      <stop offset=".77" stop-color="#0B9FE9"/>
+      <stop offset="1" stop-color="#0868D9"/>
+    </linearGradient>
+    <radialGradient id="light" cx="0" cy="0" r="1" gradientTransform="matrix(105 108 -137 133 76 52)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#C4FBFF" stop-opacity=".52"/>
+      <stop offset="1" stop-color="#B4F9FF" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="eye" x1="84" y1="132" x2="152" y2="194" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF"/>
+      <stop offset="1" stop-color="#E7FBFF"/>
+    </linearGradient>
+  </defs>
+  <path d="M25 97C40 51 62 29 98 20C128 12 159 16 185 28C216 44 231 72 237 107C243 140 249 164 232 183C214 204 187 207 157 208C126 213 103 213 79 206C49 200 29 190 21 166C13 144 15 122 25 97Z" fill="url(#body)"/>
+  <path d="M25 97C40 51 62 29 98 20C128 12 159 16 185 28C216 44 231 72 237 107C243 140 249 164 232 183C214 204 187 207 157 208C126 213 103 213 79 206C49 200 29 190 21 166C13 144 15 122 25 97Z" fill="url(#light)"/>
+  <path d="M153 28C171 32 194 48 207 67C216 81 219 93 215 94C210 94 201 81 192 70C181 56 166 41 154 32C151 30 150 28 153 28Z" fill="#E0FCFF" fill-opacity=".82"/>
+  <path d="M45 133C58 119 81 119 99 125C116 132 128 148 134 166C136 172 133 176 128 173C104 155 78 146 48 142C42 141 40 138 45 133Z" fill="url(#eye)"/>
+  <path d="M174 150C182 138 193 131 203 133C211 134 218 140 215 144C213 147 198 150 187 157C177 162 170 169 170 168C168 167 169 158 174 150Z" fill="url(#eye)"/>
+</svg>

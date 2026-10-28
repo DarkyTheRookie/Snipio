@@ -1,0 +1,10 @@
+{
+  "name": "snipio-lexical-tests",
+  "private": true,
+  "description": "Optional test-only dependencies; the extension has no runtime dependencies.",
+  "dependencies": {
+    "@lexical/plain-text": "0.22.0",
+    "esbuild": "0.25.12",
+    "lexical": "0.22.0"
+  }
+}

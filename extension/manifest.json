@@ -1,0 +1,51 @@
+{
+  "manifest_version": 3,
+  "name": "Snipio",
+  "version": "1.4.1",
+  "minimum_chrome_version": "116",
+  "icons": {
+    "16": "assets/icons/snipio-16.png",
+    "32": "assets/icons/snipio-32.png",
+    "48": "assets/icons/snipio-48.png",
+    "128": "assets/icons/snipio-128.png"
+  },
+  "description": "Type less with instant text snippets. Access quick snippets from the toolbar popup and build powerful snippets in the dashboard.",
+  "permissions": [
+    "storage",
+    "scripting",
+    "offscreen",
+    "clipboardRead"
+  ],
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_icon": {
+      "16": "assets/icons/snipio-16.png",
+      "32": "assets/icons/snipio-32.png"
+    },
+    "default_title": "Open Snipio",
+    "default_popup": "pages/manager.html"
+  },
+  "options_page": "pages/editor.html",
+  "content_scripts": [
+    {
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [
+        "lib/core.js",
+        "lib/rich.js",
+        "content.js"
+      ],
+      "all_frames": true,
+      "match_about_blank": true,
+      "run_at": "document_idle"
+    }
+  ]
+}

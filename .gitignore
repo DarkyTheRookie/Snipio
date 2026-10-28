@@ -1,0 +1,44 @@
+# Local dependencies and generated test output
+node_modules/
+artifacts/
+test-results/
+playwright-report/
+coverage/
+.nyc_output/
+.cache/
+.browser-profile/
+.chrome-profile/
+
+# Release packages and browser signing material
+dist/
+build/
+*.zip
+*.crx
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Credentials, private local settings, and exported user data
+.env
+.env.*
+!.env.example
+.npmrc
+.pypirc
+.local/
+snipio-backup*.json
+/backups/
+*.log
+*.tsbuildinfo
+
+# Editor, OS, and agent-local files
+.vscode/
+.idea/
+.codex/
+.agents/
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+*~
