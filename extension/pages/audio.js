@@ -1,10 +1,11 @@
 // Copyright (C) 2026 DarkyTheRookie
 // SPDX-License-Identifier: GPL-3.0-or-later
 "use strict";
+const extensionApi = globalThis.browser || globalThis.chrome;
 
 const sound = document.getElementById("expansion-sound");
-chrome.runtime.onMessage.addListener((message, sender, reply) => {
-  if (sender.id !== chrome.runtime.id || message?.target !== "audio") return;
+extensionApi.runtime.onMessage.addListener((message, sender, reply) => {
+  if (sender.id !== extensionApi.runtime.id || message?.target !== "audio") return;
   if (message.type === "rain:read-clipboard") {
     const field = document.createElement("textarea");
     document.body.append(field); field.focus();

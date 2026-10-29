@@ -6,11 +6,13 @@ Reviewed on 26 October 2026. This records the packages and assets inspected for 
 
 The extension ships no third-party JavaScript packages, bundled font files, or remote fonts. Its original code and non-branding assets are covered by the repository's [GPL-3.0-or-later license](../LICENSE), Copyright (C) 2026 DarkyTheRookie. The project name and logo are not covered by this license.
 
+The Chrome/Edge and Firefox packages are generated from shared first-party source. Browser-specific manifests and compatibility code add no third-party runtime dependency or remotely hosted executable code. The build scripts use Node.js built-in modules; Node.js itself and development/browser tools are not bundled in either extension package.
+
 | Item | Source and license |
 | --- | --- |
 | Snipio logo and toolbar icons displaying the logo | Original project branding. The project name and logo are not covered by the GPL license. |
 | Interface icons | Original project assets included under the project's GPL-3.0-or-later license. |
-| Expansion sound, `extension/assets/sounds/expansion.wav` | Original synthesized sound produced by [scripts/generate-sound.cjs](../scripts/generate-sound.cjs). The generator and generated sound are included under the project's GPL-3.0-or-later license. |
+| Expansion sound, `extension/assets/sounds/expansion.wav` | Original soft four-voice chord produced mathematically by [scripts/generate-sound.cjs](../scripts/generate-sound.cjs), with no recorded samples. The generator and generated sound are included under the project's GPL-3.0-or-later license. |
 | Font names in CSS | Fonts such as Segoe UI, Arial, Consolas, Cascadia Code, and Inter are requested only when already installed on the user's device. No font software is copied into the extension. |
 
 The earlier `ps2-sound.mp3` had no documented source or redistribution license. It has been replaced and is excluded from the public project. Do not add it back without establishing redistribution rights.

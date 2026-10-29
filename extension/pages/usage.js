@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 (() => {
   "use strict";
+  const extensionApi = globalThis.browser || globalThis.chrome;
   const count = document.getElementById("usage-count");
   const label = document.getElementById("usage-label");
   let revision = 0;
@@ -12,7 +13,7 @@
     label.textContent = total === 1 ? "snippet used" : "snippets used";
   }
 
-  chrome.storage.onChanged.addListener((changes, area) => {
+  extensionApi.storage.onChanged.addListener((changes, area) => {
     if (area === "local" && changes.rainStats) {
       revision++;
       render(changes.rainStats.newValue);
@@ -20,7 +21,7 @@
   });
 
   const read = revision;
-  chrome.storage.local.get("rainStats").then(result => {
+  extensionApi.storage.local.get("rainStats").then(result => {
     if (read === revision) render(result.rainStats);
   }).catch(() => {
     if (read === revision) count.closest("a").title = "Usage stats unavailable. Reopen Snipio to try again.";

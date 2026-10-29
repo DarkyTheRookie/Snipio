@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 (function (root) {
   "use strict";
+  const extensionApi = globalThis.browser || globalThis.chrome;
   const core = typeof module !== "undefined" && module.exports ? require("../lib/core.js") : root.QuickPhrase;
   const library = typeof module !== "undefined" && module.exports ? require("../lib/example-library.js") : root.ExampleLibrary;
   const DRAFT_KEYS = ["snipioEditorDraft", "snipioEditorDraftBackups", "snipioQuickDraft"];
@@ -35,7 +36,7 @@
     resetButton.disabled = true;
     status.textContent = "Resetting your templates…";
     try {
-      const result = await resetLibrary(chrome.storage.local);
+      const result = await resetLibrary(extensionApi.storage.local);
       resetButton.hidden = true;
       status.textContent = `Restored ${result.added} starter templates in Getting started. Your own snippets and usage history are kept.${result.skipped.length ? " Some templates were skipped to protect existing snippets: " + result.skipped.join("; ") : ""}`;
       openButton.hidden = false;
@@ -44,5 +45,5 @@
       resetButton.disabled = false;
     }
   });
-  openButton.addEventListener("click", () => chrome.runtime.openOptionsPage());
+  openButton.addEventListener("click", () => extensionApi.runtime.openOptionsPage());
 })(globalThis);

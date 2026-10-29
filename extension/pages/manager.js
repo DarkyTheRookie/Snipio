@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 (() => {
   "use strict";
+  const extensionApi = globalThis.browser || globalThis.chrome;
   const $ = id => document.getElementById(id);
   const DRAFT_KEY = "snipioEditorDraft";
   const QUICK_DRAFT_KEY = "snipioQuickDraft";
@@ -39,13 +40,13 @@
     if (!settings || epoch !== libraryEpoch) return false;
     busy = true;
     try {
-      const stored = await chrome.storage.local.get(["quickPhrase", "snipioLibraryResetAt"]);
+      const stored = await extensionApi.storage.local.get(["quickPhrase", "snipioLibraryResetAt"]);
       if (epoch !== libraryEpoch || (stored.snipioLibraryResetAt ?? null) !== libraryResetAt) return false;
       const latest = QuickPhrase.normalize(stored.quickPhrase);
       settings = latest;
       const next = QuickPhrase.normalize(typeof change === "function" ? change(latest) : change);
-      await chrome.storage.local.set({ quickPhrase: next });
-      try { await chrome.runtime.sendMessage?.({ type: "quickphrase:sync" }); } catch {}
+      await extensionApi.storage.local.set({ quickPhrase: next });
+      try { await extensionApi.runtime.sendMessage?.({ type: "quickphrase:sync" }); } catch {}
       settings = next; render(); $("status").textContent = "Saved on this device.";
       return true;
     } catch (error) { $("form-error").textContent = error.message || "Could not save. Please try again."; $("status").textContent = "Could not save. Your draft is kept."; return false; }
@@ -153,14 +154,14 @@
     clearTimeout(draftTimer);
     if (!quickDirty || !quickToken) return;
     const draft = quickDraft(), epoch = libraryEpoch;
-    try { await QuickPhrase.withLibraryLock(async () => { const saved = await chrome.storage.local.get("snipioLibraryResetAt"); if (epoch === libraryEpoch && quickDirty && (saved.snipioLibraryResetAt ?? null) === draft.libraryResetAt) await chrome.storage.local.set({ [QUICK_DRAFT_KEY]: draft }); }); }
+    try { await QuickPhrase.withLibraryLock(async () => { const saved = await extensionApi.storage.local.get("snipioLibraryResetAt"); if (epoch === libraryEpoch && quickDirty && (saved.snipioLibraryResetAt ?? null) === draft.libraryResetAt) await extensionApi.storage.local.set({ [QUICK_DRAFT_KEY]: draft }); }); }
     catch { quickStatus("Could not save your draft. Keep this window open and try again."); }
   }
   function clearQuickDraft(token = quickToken) {
     const epoch = libraryEpoch;
     return QuickPhrase.withLibraryLock(async () => {
-      const saved = await chrome.storage.local.get([QUICK_DRAFT_KEY, "snipioLibraryResetAt"]);
-      if (epoch === libraryEpoch && (saved.snipioLibraryResetAt ?? null) === libraryResetAt && saved[QUICK_DRAFT_KEY]?.token === token && !quickDirty) await chrome.storage.local.set({ [QUICK_DRAFT_KEY]: null });
+      const saved = await extensionApi.storage.local.get([QUICK_DRAFT_KEY, "snipioLibraryResetAt"]);
+      if (epoch === libraryEpoch && (saved.snipioLibraryResetAt ?? null) === libraryResetAt && saved[QUICK_DRAFT_KEY]?.token === token && !quickDirty) await extensionApi.storage.local.set({ [QUICK_DRAFT_KEY]: null });
     });
   }
   function markChanged() {
@@ -183,10 +184,10 @@
         await QuickPhrase.withLibraryLock(async () => {
           if (epoch !== libraryEpoch) throw new Error("The library was reset. Reopen the snippet to continue.");
           const persisted = { editingId: $("editor").open ? editingId : item?.id || null, pendingSnippetId: $("editor").open ? pendingSnippetId : item?.id || null, baselineValues: $("editor").open ? baselineValues : valuesFor(item), libraryResetAt, values: values || valuesFor(item), token: crypto.randomUUID(), updatedAt: Date.now() };
-          await chrome.storage.local.set({ [DRAFT_KEY]: persisted });
+          await extensionApi.storage.local.set({ [DRAFT_KEY]: persisted });
         });
       }
-      await chrome.runtime.openOptionsPage();
+      await extensionApi.runtime.openOptionsPage();
       quickDirty = false; await clearQuickDraft();
       if ($("editor").open) $("editor").close();
       if ($("preview-dialog").open) $("preview-dialog").close();
@@ -289,10 +290,10 @@
       await persistQuickDraft();
       const draft = quickDraft(), epoch = libraryEpoch;
       await QuickPhrase.withLibraryLock(async () => {
-        const stored = await chrome.storage.local.get("snipioEditorDraftBackups");
+        const stored = await extensionApi.storage.local.get("snipioEditorDraftBackups");
         if (epoch !== libraryEpoch) return;
         const backups = Array.isArray(stored.snipioEditorDraftBackups) ? stored.snipioEditorDraftBackups : [];
-        await chrome.storage.local.set({ snipioEditorDraftBackups: [draft, ...backups.filter(item => item.token !== draft.token)] });
+        await extensionApi.storage.local.set({ snipioEditorDraftBackups: [draft, ...backups.filter(item => item.token !== draft.token)] });
       });
     }
     $("editor").close();
@@ -329,7 +330,7 @@
   };
   $("enabled").onchange = async () => { const enabled = $("enabled").checked; await save(latest => ({ ...latest, enabled })); render(); };
   const engine = document.createElement("script"); engine.src = "../content.js"; document.body.append(engine);
-  chrome.storage.onChanged.addListener((changes, area) => {
+  extensionApi.storage.onChanged.addListener((changes, area) => {
     if (area !== "local") return;
     if (changes.snipioLibraryResetAt) {
       libraryResetAt = changes.snipioLibraryResetAt.newValue ?? null; libraryEpoch++;
@@ -346,15 +347,15 @@
     }
   });
   window.addEventListener("pagehide", () => {
-    if (quickDirty && quickToken) { clearTimeout(draftTimer); clearTimeout(autosaveTimer); void chrome.storage.local.set({ [QUICK_DRAFT_KEY]: quickDraft() }); }
+    if (quickDirty && quickToken) { clearTimeout(draftTimer); clearTimeout(autosaveTimer); void extensionApi.storage.local.set({ [QUICK_DRAFT_KEY]: quickDraft() }); }
   });
   QuickPhrase.withLibraryLock(async () => {
-    const result = await chrome.storage.local.get(["quickPhrase", QUICK_DRAFT_KEY, "snipioLibraryResetAt"]);
-    await chrome.storage.local.remove?.("snipioLibraryResetBackup");
+    const result = await extensionApi.storage.local.get(["quickPhrase", QUICK_DRAFT_KEY, "snipioLibraryResetAt"]);
+    await extensionApi.storage.local.remove?.("snipioLibraryResetBackup");
     settings = QuickPhrase.normalize(result.quickPhrase);
     const demos = ExampleLibrary.ensureDemos(settings);
     settings = demos.settings;
-    if (JSON.stringify(settings) !== JSON.stringify(result.quickPhrase)) await chrome.storage.local.set({ quickPhrase: settings });
+    if (JSON.stringify(settings) !== JSON.stringify(result.quickPhrase)) await extensionApi.storage.local.set({ quickPhrase: settings });
     return result;
   }).then(async result => {
     libraryResetAt = result.snipioLibraryResetAt ?? null;

@@ -7,7 +7,7 @@ const vm = require("node:vm");
 const fs = require("node:fs");
 const QuickPhrase = require(runtimeFile("core.js"));
 
-async function harness(config = {}, deferInitialRead = false, configureChrome = () => {}) {
+async function harness(config = {}, deferInitialRead = false, configureChrome = () => {}, namespace = "chrome") {
   const handlers = {};
   const listenerCounts = {};
   const messages = [];
@@ -46,7 +46,7 @@ async function harness(config = {}, deferInitialRead = false, configureChrome = 
   configureChrome(chrome);
   const source = fs.readFileSync(require.resolve(runtimeFile("content.js")), "utf8");
   const context = vm.createContext({
-    QuickPhrase, chrome, Element, HTMLInputElement, HTMLTextAreaElement,
+    QuickPhrase, ...(namespace === "browser" ? { browser: chrome, chrome: new Proxy({}, { get() { throw new Error("Legacy chrome API accessed"); } }) } : { chrome }), Element, HTMLInputElement, HTMLTextAreaElement,
     InputEvent: class { constructor(type, options) { this.type = type; Object.assign(this, options); } },
     document: { addEventListener: (name, fn) => {
       handlers[name] = fn; listenerCounts[name] = (listenerCounts[name] || 0) + 1;
@@ -209,4 +209,19 @@ test("an older initial storage read cannot overwrite a newly saved shortcut", as
   const field = new h.HTMLInputElement();
   h.emit("input", field);
   assert.equal(field.value, "Newest phrase");
+});
+
+test("native browser API initializes expansion even when the chrome namespace is unusable", async () => {
+  const h = await harness({}, false, () => {}, "browser");
+  assert.equal(h.hasInstance(), true);
+  const field = new h.HTMLInputElement();
+  h.emit("input", field);
+  assert.equal(field.value, "Hello, how are you?");
+  assert.equal(h.messages.length, 1);
+  h.setStored({ enabled: true, mode: "immediate", shortcuts: [{ trigger: "next", replacement: "Native browser API" }] });
+  await h.reinject();
+  const next = new h.HTMLInputElement("next");
+  h.emit("input", next);
+  assert.equal(next.value, "Native browser API");
+  assert.equal(h.listenerCounts.input, 1);
 });

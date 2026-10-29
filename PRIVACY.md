@@ -1,8 +1,8 @@
 # Snipio Privacy Policy
 
-Last updated: 28 October 2026
+Last updated: 29 October 2026
 
-This policy describes the Snipio browser extension, currently version 1.4.1, maintained by DarkyTheRookie. Snipio expands text shortcuts into snippets and provides local tools for editing, organizing, and backing up your library.
+This policy describes the Snipio browser extension, currently version 1.4.2, maintained by DarkyTheRookie, including its desktop Chrome, Edge, and Firefox packages. Snipio expands text shortcuts into snippets and provides local tools for editing, organizing, and backing up your library.
 
 ## Data processed on your device
 
@@ -14,7 +14,7 @@ Snipio processes the following information to provide its features:
 - Text in editable website fields, as needed to recognize a shortcut and insert its replacement.
 - Values you enter into snippet fill-in forms and clipboard text when a triggered snippet uses the clipboard variable.
 
-Your library, settings, drafts, and usage statistics are stored in the browser's local extension storage (`chrome.storage.local`). Snipio does not use browser storage sync or provide a cloud account or cloud synchronization service.
+Your library, settings, drafts, and usage statistics are stored in the browser's local extension storage (`chrome.storage.local` or the equivalent `browser.storage.local` API). Each browser installation has its own local data. Snipio does not use browser storage sync or provide a cloud account or cloud synchronization service.
 
 ## How data is used and shared
 
@@ -30,7 +30,9 @@ Snipio reads clipboard text when an expansion uses the `{clipboard}` variable. I
 
 Access to HTTP and HTTPS pages allows text expansion in editable fields, including supported embedded editors. Snipio can query open HTTP/HTTPS tabs to attach its local content scripts after installation, updates, or settings changes. It does not send the tab information to the developer. You can manage the extension's site access and permissions in your browser; restricting access may prevent expansion on those sites.
 
-The `storage` permission supports local data storage. The `scripting` permission attaches the local expansion scripts to open pages. The `offscreen` permission supports local sound playback and the clipboard feature. The `clipboardRead` permission supports the triggered clipboard variable. All executable extension scripts are included in the extension package.
+The `storage` permission supports local data storage. The `scripting` permission attaches the local expansion scripts to open pages. The `clipboardRead` permission supports the triggered clipboard variable. In Chrome and Edge, the `offscreen` permission supports local sound playback and the clipboard feature. Firefox performs those tasks in its local extension background page and does not request `offscreen`. All executable extension scripts are included in the extension package.
+
+The Firefox package declares no data collection or transmission under Mozilla's data-collection permission system, which concerns handling outside the add-on or local browser. This declaration does not mean that Snipio processes no data locally; the local processing is described above. Browser-store disclosures follow each store's terminology and must remain consistent with these practices.
 
 ## Backups and security
 

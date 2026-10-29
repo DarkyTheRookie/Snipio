@@ -2,9 +2,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 (() => {
   "use strict";
+  const extensionApi = globalThis.browser || globalThis.chrome;
   function storageAvailable() {
     try {
-      const storage = globalThis.chrome?.storage;
+      const storage = extensionApi?.storage;
       return typeof storage?.local?.get === "function" && typeof storage?.onChanged?.addListener === "function";
     } catch { return false; }
   }
@@ -152,7 +153,7 @@
       if (fields === null || expansionWork !== work) return;
       now = new Date();
       const active = QuickPhrase.renderLogic(source, { now, fields });
-      const result = active.includes("{clipboard}") ? await chrome.runtime.sendMessage({ type: "rain:clipboard" }) : { ok: true, text: "" };
+      const result = active.includes("{clipboard}") ? await extensionApi.runtime.sendMessage({ type: "rain:clipboard" }) : { ok: true, text: "" };
       if (expansionWork !== work || work.sequence !== typingSequence || !unchanged(ctx, work.saved)) return;
       if (!result?.ok || typeof result.text !== "string") throw new Error("Clipboard unavailable. Your typed trigger was kept; check Snipio's clipboard permission and try again.");
       finish(result.text, fields);
@@ -182,7 +183,7 @@
   async function refreshSettings() {
     const revision = ++settingsRevision;
     try {
-      const result = await chrome.storage.local.get("quickPhrase");
+      const result = await extensionApi.storage.local.get("quickPhrase");
       // A change event or later refresh must win over an older storage read.
       if (revision !== settingsRevision) return;
       settings = QuickPhrase.normalize(result.quickPhrase);
@@ -204,7 +205,7 @@
       ready = true;
     }
   }
-  try { chrome.storage.onChanged.addListener(storageChanged); }
+  try { extensionApi.storage.onChanged.addListener(storageChanged); }
   catch { return; }
   document.addEventListener("focusin", refreshSettings, true);
   document.addEventListener("visibilitychange", () => {
@@ -298,7 +299,7 @@
     animateExpansion(target);
     // Playback runs in an extension page so website media policies cannot block it.
     try {
-      chrome.runtime.sendMessage({ type: "rain:expanded", id: item.id,
+      extensionApi.runtime.sendMessage({ type: "rain:expanded", id: item.id,
         expansionLength: Array.from(item.replacement).length, triggerLength: Array.from(item.trigger).length }).catch(() => {});
     } catch { /* Reloading the extension must not interrupt typing. */ }
   }

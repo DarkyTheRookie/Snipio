@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 (() => {
   "use strict";
+  const extensionApi = globalThis.browser || globalThis.chrome;
   const $ = id => document.getElementById(id);
   const backup = SnipioBackup;
   let selected = null, selectionRevision = 0, busy = false, currentRevision = 0;
@@ -14,7 +15,7 @@
   async function refreshCurrent() {
     const revision = ++currentRevision;
     try {
-      const stored = await chrome.storage.local.get(backup.KEYS);
+      const stored = await extensionApi.storage.local.get(backup.KEYS);
       if (revision === currentRevision) $("current-summary").textContent = describe(backup.summary(backup.createBackup(stored).data));
     } catch { if (revision === currentRevision) $("current-summary").textContent = "Could not read your library. Try exporting again."; }
   }
@@ -22,7 +23,7 @@
     if (busy) return;
     setBusy(true); error(); $("backup-status").textContent = "Preparing backup…";
     try {
-      const value = await backup.exportBackup(chrome.storage.local);
+      const value = await backup.exportBackup(extensionApi.storage.local);
       const text = JSON.stringify(value, null, 2);
       if (new TextEncoder().encode(text).length > backup.MAX_BYTES) throw new Error("This backup is larger than the 20 MB file limit.");
       const url = URL.createObjectURL(new Blob([text], { type: "application/json" }));
@@ -57,14 +58,14 @@
     if (!confirm(`Import ${summary.snippets.toLocaleString()} snippets from this backup?\n\nThis replaces your current snippets, folders, favorites, settings, drafts, and usage history. Export a backup first if you want to keep your current data.`)) return;
     setBusy(true); error(); $("backup-status").textContent = "Importing backup…";
     try {
-      await backup.restoreBackup(chrome.storage.local, value);
+      await backup.restoreBackup(extensionApi.storage.local, value);
       selected = null; selectionRevision++; $("backup-file").value = ""; $("backup-preview").hidden = true;
       $("backup-status").textContent = "Backup imported. Reopen Snipio to continue with your restored library and drafts.";
       await refreshCurrent();
     } catch (cause) { $("backup-status").textContent = ""; error(cause.message || "Could not import this backup. Please try again."); }
     finally { setBusy(false); }
   };
-  chrome.storage.onChanged.addListener((changes, area) => {
+  extensionApi.storage.onChanged.addListener((changes, area) => {
     if (area === "local" && backup.KEYS.some(key => changes[key])) void refreshCurrent();
   });
   refreshCurrent().finally(() => { if (!busy) $("export-backup").disabled = false; });

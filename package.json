@@ -1,13 +1,17 @@
 {
   "name": "snipio",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "private": true,
-  "description": "Free, local-first text snippets for Chrome and Edge. No account required.",
+  "description": "Free, local-first text snippets for Chrome, Edge, and Firefox. No account required.",
   "license": "GPL-3.0-or-later",
   "engines": { "node": ">=22" },
   "scripts": {
     "test": "node scripts/test.cjs",
     "check": "node scripts/check-extension.cjs",
+    "build": "node scripts/build.cjs",
+    "build:chromium": "node scripts/build.cjs chromium",
+    "build:firefox": "node scripts/build.cjs firefox",
+    "check:packages": "node scripts/check-extension.cjs dist/chrome-edge && node scripts/check-extension.cjs dist/firefox",
     "test:browser": "node scripts/test-browser.cjs",
     "generate:sound": "node scripts/generate-sound.cjs"
   },

@@ -2,13 +2,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 (() => {
   "use strict";
+  const extensionApi = globalThis.browser || globalThis.chrome;
   const $ = id => document.getElementById(id);
   let revision = 0;
   async function render() {
     const read = ++revision;
     try {
       // Keep the original keys so updates preserve existing shortcuts and usage.
-      const result = await chrome.storage.local.get(["rainStats", "quickPhrase"]);
+      const result = await extensionApi.storage.local.get(["rainStats", "quickPhrase"]);
       if (read !== revision) return;
       const entries = QuickPhrase.normalizeStats(result.rainStats).entries;
       const shortcuts = QuickPhrase.normalize(result.quickPhrase).shortcuts;
@@ -30,12 +31,12 @@
     if (!confirm("Reset all usage stats on this device? Your snippets will be kept.")) return;
     $("reset-stats").disabled = true;
     try {
-      const result = await chrome.runtime.sendMessage({ type: "rain:reset-stats" });
+      const result = await extensionApi.runtime.sendMessage({ type: "rain:reset-stats" });
       if (!result?.ok) throw new Error();
       await render(); $("status").textContent = "Stats reset.";
     } catch { $("status").textContent = "Could not reset stats. Please try again."; }
     finally { $("reset-stats").disabled = false; }
   };
-  chrome.storage.onChanged.addListener((changes, area) => { if (area === "local" && (changes.rainStats || changes.quickPhrase)) render(); });
+  extensionApi.storage.onChanged.addListener((changes, area) => { if (area === "local" && (changes.rainStats || changes.quickPhrase)) render(); });
   render();
 })();

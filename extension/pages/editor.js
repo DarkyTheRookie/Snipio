@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 (() => {
   "use strict";
+  const extensionApi = globalThis.browser || globalThis.chrome;
   const $ = id => document.getElementById(id);
   const DRAFT_KEY = "snipioEditorDraft";
   const BACKUP_KEY = "snipioEditorDraftBackups";
@@ -85,9 +86,9 @@
     ownDraftTokens.add(draft.token);
     draftQueue = draftQueue.catch(() => {}).then(() => QuickPhrase.withLibraryLock(async () => {
       if (generation !== draftGeneration) return;
-      const marker = await chrome.storage.local.get("snipioLibraryResetAt");
+      const marker = await extensionApi.storage.local.get("snipioLibraryResetAt");
       if (generation !== draftGeneration || (marker.snipioLibraryResetAt ?? null) !== draft.libraryResetAt) return;
-      await chrome.storage.local.set({ [DRAFT_KEY]: draft });
+      await extensionApi.storage.local.set({ [DRAFT_KEY]: draft });
       if (generation === draftGeneration && dirty && !autosaveTimer && !busy) status("Draft saved · finish the snippet to autosave", "dirty");
     })).catch(() => status("Draft could not be saved", "error"));
     return draftQueue;
@@ -236,13 +237,13 @@
     return QuickPhrase.withLibraryLock(() => removeCurrentDraft(token, onlyIfClean, epoch));
   }
   async function removeCurrentDraft(token, onlyIfClean, epoch) {
-    const saved = await chrome.storage.local.get([DRAFT_KEY, BACKUP_KEY, "snipioLibraryResetAt"]);
+    const saved = await extensionApi.storage.local.get([DRAFT_KEY, BACKUP_KEY, "snipioLibraryResetAt"]);
     if (epoch !== libraryEpoch || (saved.snipioLibraryResetAt ?? null) !== libraryResetAt || (onlyIfClean && (dirty || token !== currentToken))) return;
     const next = {};
     if (saved[DRAFT_KEY]?.token === token) next[DRAFT_KEY] = null;
     backupDrafts = (Array.isArray(saved[BACKUP_KEY]) ? saved[BACKUP_KEY] : backupDrafts).filter(draft => draft.token !== token);
     next[BACKUP_KEY] = backupDrafts;
-    await chrome.storage.local.set(next);
+    await extensionApi.storage.local.set(next);
     $("recovered-drafts").hidden = !backupDrafts.length;
   }
   async function discardCurrent() {
@@ -349,14 +350,14 @@
     if (busy) return false;
     busy = true; $("save-shortcut").disabled = true;
     try {
-      const stored = await chrome.storage.local.get(["quickPhrase", "snipioLibraryResetAt"]);
+      const stored = await extensionApi.storage.local.get(["quickPhrase", "snipioLibraryResetAt"]);
       if (epoch !== libraryEpoch || (stored.snipioLibraryResetAt ?? null) !== libraryResetAt) return false;
       settings = QuickPhrase.normalize(stored.quickPhrase);
       const next = QuickPhrase.normalize(change(settings));
       next.mode = "immediate";
-      await chrome.storage.local.set({ quickPhrase: next });
+      await extensionApi.storage.local.set({ quickPhrase: next });
       settings = next;
-      try { await chrome.runtime.sendMessage?.({ type: "quickphrase:sync" }); } catch {}
+      try { await extensionApi.runtime.sendMessage?.({ type: "quickphrase:sync" }); } catch {}
       renderLibrary(); fillFolderSelect();
       return true;
     } catch (error) {
@@ -609,11 +610,11 @@
   function archiveDraft(draft) { return QuickPhrase.withLibraryLock(() => persistArchivedDraft(draft)); }
   async function persistArchivedDraft(draft) {
     if (!isDraft(draft)) return;
-    const saved = await chrome.storage.local.get([BACKUP_KEY, "snipioLibraryResetAt"]);
+    const saved = await extensionApi.storage.local.get([BACKUP_KEY, "snipioLibraryResetAt"]);
     if ((saved.snipioLibraryResetAt ?? null) !== (draft.libraryResetAt ?? null)) return;
     const previous = Array.isArray(saved[BACKUP_KEY]) ? saved[BACKUP_KEY].filter(isDraft) : [];
     backupDrafts = [draft, ...previous.filter(item => item.token !== draft.token)];
-    await chrome.storage.local.set({ [BACKUP_KEY]: backupDrafts });
+    await extensionApi.storage.local.set({ [BACKUP_KEY]: backupDrafts });
     $("recovered-drafts").hidden = false;
   }
   async function receiveDraft(draft) {
@@ -851,19 +852,19 @@
     clearTimeout(draftTimer); clearTimeout(autosaveTimer); draftGeneration++;
     // Start the storage API call synchronously while the document is alive.
     const draft = makeDraft(); ownDraftTokens.add(draft.token);
-    void chrome.storage.local.set({ [DRAFT_KEY]: draft });
+    void extensionApi.storage.local.set({ [DRAFT_KEY]: draft });
   });
 
   async function initialize() {
     $("save-shortcut").disabled = true; $("add-shortcut").disabled = true;
     try {
       const saved = await QuickPhrase.withLibraryLock(async () => {
-        const stored = await chrome.storage.local.get(["quickPhrase", DRAFT_KEY, BACKUP_KEY, "snipioLibraryResetAt"]);
-        await chrome.storage.local.remove?.("snipioLibraryResetBackup");
+        const stored = await extensionApi.storage.local.get(["quickPhrase", DRAFT_KEY, BACKUP_KEY, "snipioLibraryResetAt"]);
+        await extensionApi.storage.local.remove?.("snipioLibraryResetBackup");
         const initial = QuickPhrase.normalize(stored.quickPhrase);
         const demos = typeof ExampleLibrary.ensureDemos === "function" ? ExampleLibrary.ensureDemos(initial) : initial;
         const normalized = QuickPhrase.normalize(demos.settings || demos);
-        if (JSON.stringify(normalized) !== JSON.stringify(stored.quickPhrase)) await chrome.storage.local.set({ quickPhrase: normalized });
+        if (JSON.stringify(normalized) !== JSON.stringify(stored.quickPhrase)) await extensionApi.storage.local.set({ quickPhrase: normalized });
         return { ...stored, quickPhrase: normalized };
       });
       libraryResetAt = saved.snipioLibraryResetAt ?? null;
@@ -873,7 +874,7 @@
       ready = true;
       if (isDraft(saved[DRAFT_KEY])) await archiveDraft(saved[DRAFT_KEY]);
       showEmptyEditor();
-      chrome.storage.onChanged.addListener((changes, area) => {
+      extensionApi.storage.onChanged.addListener((changes, area) => {
         if (area !== "local") return;
         if (changes.snipioLibraryResetAt) {
           libraryResetAt = changes.snipioLibraryResetAt.newValue ?? null; libraryEpoch++;

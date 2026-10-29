@@ -1,19 +1,21 @@
 // Copyright (C) 2026 DarkyTheRookie
 // SPDX-License-Identifier: GPL-3.0-or-later
 "use strict";
-importScripts("lib/core.js");
+// Firefox's MV3 event page preloads core.js; Chromium uses a service worker.
+if (typeof importScripts === "function") importScripts("lib/core.js");
+const backgroundApi = typeof browser !== "undefined" ? browser : chrome;
 
-// The service worker is the only stats writer. Queue read/modify/write operations
+// The background context is the only stats writer. Queue read/modify/write operations
 // so simultaneous expansions in tabs cannot overwrite one another.
 let statsQueue = Promise.resolve();
 function updateStats(message) {
   const operation = statsQueue.then(() => QuickPhrase.withLibraryLock(async () => {
-    if (message.type === "rain:reset-stats") return chrome.storage.local.set({ rainStats: { entries: [] } });
+    if (message.type === "rain:reset-stats") return backgroundApi.storage.local.set({ rainStats: { entries: [] } });
     if (typeof message.id !== "string" || !message.id ||
         !Number.isSafeInteger(message.expansionLength) || message.expansionLength < 0 ||
         !Number.isSafeInteger(message.triggerLength) || message.triggerLength < 1) return;
-    const result = await chrome.storage.local.get("rainStats");
-    await chrome.storage.local.set({ rainStats: QuickPhrase.recordUsage(result.rainStats, message.id, message.expansionLength, message.triggerLength) });
+    const result = await backgroundApi.storage.local.get("rainStats");
+    await backgroundApi.storage.local.set({ rainStats: QuickPhrase.recordUsage(result.rainStats, message.id, message.expansionLength, message.triggerLength) });
   }));
   statsQueue = operation.catch(() => {});
   return operation;
@@ -29,9 +31,9 @@ function syncOpenTabs() {
   syncing = (async () => {
     do {
       syncAgain = false;
-      const tabs = await chrome.tabs.query({ url: ["http://*/*", "https://*/*"] });
+      const tabs = await backgroundApi.tabs.query({ url: ["http://*/*", "https://*/*"] });
       await Promise.allSettled(tabs.filter(tab => Number.isInteger(tab.id)).map(tab =>
-        chrome.scripting.executeScript({
+        backgroundApi.scripting.executeScript({
           target: { tabId: tab.id, allFrames: true },
           files: ["lib/core.js", "lib/rich.js", "content.js"]
         })
@@ -43,21 +45,24 @@ function syncOpenTabs() {
   return syncing;
 }
 
-chrome.runtime.onInstalled.addListener(() => { syncOpenTabs().catch(() => {}); });
-chrome.runtime.onStartup.addListener(() => { syncOpenTabs().catch(() => {}); });
-chrome.storage.onChanged.addListener((changes, area) => {
+backgroundApi.runtime.onInstalled.addListener(() => { syncOpenTabs().catch(() => {}); });
+backgroundApi.runtime.onStartup.addListener(() => { syncOpenTabs().catch(() => {}); });
+backgroundApi.storage.onChanged.addListener((changes, area) => {
   if (area === "local" && changes.quickPhrase) syncOpenTabs().catch(() => {});
 });
-// Share one audio document across tabs, including concurrent first expansions.
+// Chromium shares an offscreen document. Firefox already has a document-based
+// background context and uses it directly, without an offscreen API permission.
+const hasBackgroundDocument = typeof document !== "undefined";
+let backgroundSound = null;
 let preparingAudio = null;
 async function prepareOffscreen() {
   if (!preparingAudio) {
     preparingAudio = (async () => {
-      const contexts = await chrome.runtime.getContexts({
+      const contexts = await backgroundApi.runtime.getContexts({
         contextTypes: ["OFFSCREEN_DOCUMENT"],
-        documentUrls: [chrome.runtime.getURL("pages/audio.html")]
+        documentUrls: [backgroundApi.runtime.getURL("pages/audio.html")]
       });
-      if (!contexts.length) await chrome.offscreen.createDocument({
+      if (!contexts.length) await backgroundApi.offscreen.createDocument({
         url: "pages/audio.html",
         reasons: ["AUDIO_PLAYBACK", "CLIPBOARD"],
         justification: "Play expansion feedback and read the clipboard only for a triggered clipboard variable."
@@ -67,22 +72,45 @@ async function prepareOffscreen() {
   await preparingAudio;
 }
 async function playExpansionSound() {
+  if (hasBackgroundDocument) {
+    if (!backgroundSound) backgroundSound = new Audio(backgroundApi.runtime.getURL("assets/sounds/expansion.wav"));
+    backgroundSound.currentTime = 0;
+    await backgroundSound.play();
+    return { ok: true };
+  }
   await prepareOffscreen();
-  return chrome.runtime.sendMessage({ type: "rain:play-sound", target: "audio" });
+  return backgroundApi.runtime.sendMessage({ type: "rain:play-sound", target: "audio" });
+}
+async function readClipboard() {
+  if (!hasBackgroundDocument) {
+    await prepareOffscreen();
+    return backgroundApi.runtime.sendMessage({ type: "rain:read-clipboard", target: "audio" });
+  }
+  if (typeof navigator.clipboard?.readText === "function") {
+    return { ok: true, text: await navigator.clipboard.readText() };
+  }
+  // Compatibility fallback for a document context without the Clipboard API.
+  // Do not retry a denied readText() call through the legacy paste API.
+  const field = document.createElement("textarea");
+  document.body.append(field);
+  field.focus();
+  try {
+    const ok = document.execCommand("paste");
+    return { ok, text: ok ? field.value : "" };
+  } finally { field.remove(); }
 }
 
-chrome.runtime.onMessage.addListener((message, sender, reply) => {
-  if (sender.id !== chrome.runtime.id) return;
+backgroundApi.runtime.onMessage.addListener((message, sender, reply) => {
+  if (sender.id !== backgroundApi.runtime.id) return;
   if (message?.type === "rain:clipboard") {
-    prepareOffscreen().then(() => chrome.runtime.sendMessage({ type: "rain:read-clipboard", target: "audio" }))
-      .then(reply, () => reply({ ok: false }));
+    readClipboard().then(reply, () => reply({ ok: false }));
     return true;
   }
   if (message?.type === "rain:expanded") {
     Promise.allSettled([playExpansionSound(), updateStats(message)]).then(results => reply({ ok: results.every(result => result.status === "fulfilled") }));
     return true;
   }
-  if (message?.type === "rain:reset-stats" && sender.url === chrome.runtime.getURL("pages/stats.html")) {
+  if (message?.type === "rain:reset-stats" && sender.url === backgroundApi.runtime.getURL("pages/stats.html")) {
     updateStats(message).then(() => reply({ ok: true }), () => reply({ ok: false }));
     return true;
   }
